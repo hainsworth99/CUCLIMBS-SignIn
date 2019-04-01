@@ -4,12 +4,17 @@ A project to track practice attendance for the University of Colorado, Boulder, 
 # Dependencies
 * [PostgreSQL](https://www.postgresql.org/) - An open source object-relational database system. 
 * [pyscopg2](http://initd.org/psycopg/) - A PostgreSQL adapter for python
+* [CircuitPython CharLCD](https://github.com/adafruit/Adafruit_CircuitPython_CharLCD) - A python library for controlling character LCD boards via Raspberry Pi
 ```bash
 sudo apt install postgresql libpq-dev postgresql-client postgresql-client-common -y
 ```
 ```bash
 pip3 install psycopg2
 ```
+```bash
+pip3 install adafruit-circuitpython-charlcd
+```
+[More on LCD screen setup and usage](https://learn.adafruit.com/character-lcds/python-circuitpython)
 # Database Setup
 Login to postgres and create database.
 ```bash
@@ -31,6 +36,9 @@ Run the program from sign_in.py using python3. Tables will be created automatica
 ```bash
 python3 sign_in.py
 ```
-As the program runs, card swipes through the USB card reader will be automatically processed and team member will be added to the database as needed. 
+As the program runs, BuffOne card swipes through the USB card reader will be automatically processed and team member information will be added to the database as needed. The database can be read by running the read_data.py script, which outputs a table of attendance information of each person in the database. 
+```bash
+python3 read_data.py
+```
 # Authors
 * **Harold Ainsworth** - *Initial Work*
