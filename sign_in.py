@@ -2,11 +2,15 @@
 # author: Harold Ainsworth, CU Climbing Team, spring 2019
 # sign_in.py - driver file for sign-in program
 import sys
+import time
+import board
+import digitalio
+import adafruit_character_lcd.character_lcd as char_lcd
 import datetime as dt
 import psycopg2 as pg
 from config import config
 
-def record_attendance(conn, student_data):
+def record_attendance(conn, lcd, student_data):
 	""" records student practice attendence for the current date """
 
 	cur = conn.cursor()
@@ -37,7 +41,10 @@ def record_attendance(conn, student_data):
 		print('Attendance already logged, skipping.')
 
 	conn.commit()
+	lcd.clear()
+	lcd.message = '{}\nThank You!'.format(student_data[1])
 	print('Task completed, databases are up-to-date.')
+	time.sleep(2)
 
 def name_from_data(card_data):
 	""" parses first/lastname and student id from card_data """
@@ -88,9 +95,26 @@ def init_tables(cur):
 	print('Done.')
 
 def main():
+	# LCD pin config
+	lcd_rs = digitalio.DigitalInOut(board.D26)
+	lcd_en = digitalio.DigitalInOut(board.D19)
+	lcd_d7 = digitalio.DigitalInOut(board.D27)
+	lcd_d6 = digitalio.DigitalInOut(board.D22)
+	lcd_d5 = digitalio.DigitalInOut(board.D24)
+	lcd_d4 = digitalio.DigitalInOut(board.D25)
+	lcd_backlight = digitalio.DigitalInOut(board.D13)
+
+	# LCD size
+	lcd_columns = 16
+	lcd_rows = 2
+
+	# LCD class init
+	lcd = char_lcd.Character_LCD_Mono(lcd_rs, lcd_en, lcd_d4, lcd_d5,
+		 lcd_d6, lcd_d7, lcd_columns, lcd_rows)
+
 	# connect to the psql database
 	try:
-		print('Connecting to PosgreSQL database...', end=' ')
+		print('Connecting to PostgreSQL database...', end=' ')
 		params = config()
 		conn = pg.connect(**params)
 	except (Exception, pg.OperationalError) as error:
@@ -105,11 +129,14 @@ def main():
 	while True:
 		# get data from card reader
 		print('-'*60)
+		lcd.clear()
+		lcd.message = 'Please swipe\nBuffOne...'
 		card_data = input('Please swipe card.\n')
 		if card_data == "":
 			# for debugging purposes, stop program if enter pressed
 			print('Exiting...')
 			conn.close()
+			lcd.clear()
 			sys.exit()
 		print('Processing...')
 		student_data = name_from_data(card_data)
@@ -117,10 +144,13 @@ def main():
 		# ensure data read from card properly
 		if student_data is not None:
 			# if success...
-			record_attendance(conn, student_data)
+			record_attendance(conn, lcd, student_data)
 		else:
 			# if error
+			lcd.clear()
+			lcd.message = 'Error, please\ntry again.'
 			print('Error, try again.')
+			time.sleep(1.5)
 
 	# clean up
 	conn.close()
